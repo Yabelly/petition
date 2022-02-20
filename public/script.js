@@ -6,18 +6,33 @@ const canvas = document.getElementById("canvas");
 const submit = $("#submit");
 const ctx = canvas.getContext("2d");
 let coordinates = { x: 0, y: 0 };
+let doneDrawing = false;
 //========SETUP==========
 //
 //========EVENTS==========
 
-$(canvas).on("mousedown", (e) => {
-    reposition(e);
-    $(canvas).on("mousemove", drawing);
-});
-$(canvas).on("mouseup", () => {
-    $(canvas).off("mousemove", drawing);
-});
+starting();
+stopping();
+submitting();
 
+//=======FUNCTIONS===========
+
+function starting() {
+    $(canvas).on("mousedown", (e) => {
+        reposition(e);
+        $(canvas).on("mousemove", drawing);
+    });
+}
+function stopping() {
+    $(canvas).on("mouseup", () => {
+        $(canvas).off("mousemove", drawing);
+        doneDrawing = true;
+    });
+}
+///what???
+function submitting() {
+    submit.on("click", () => {});
+}
 function reposition(e) {
     coordinates.x = e.clientX - canvas.offsetLeft;
     coordinates.y = e.clientY - canvas.offsetTop;
@@ -32,7 +47,4 @@ function drawing(e) {
     ctx.lineTo(coordinates.x, coordinates.y);
     ctx.stroke();
 }
-// canvas.on("mouseup", (e) => {
-//     console.log("mouse is let go");
-// });
-//========EVENTS==========
+//=======FUNCTIONS===========
