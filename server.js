@@ -8,6 +8,7 @@ app.use(express.static("./public"));
 app.use(express.urlencoded({ extended: false }));
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
+app.set("views", "./views");
 
 //===================import and setup=======================
 //
@@ -22,13 +23,23 @@ app.get("/petition", (req, res) => {
     res.render("petition");
     res.status(200);
 });
-///what??
+// ///what??
+// app.post("/petition", (req, res) => {
+//     const { first, last, signature } = req.body;
+//     console.log("a POST requist was made at /petition");
+//     db.addsignatures(req.body.first, req.body.last, req.body.signature)
+//         .then(console.log(req.body.first))
+//         .catch(err());
+// });
 app.post("/petition", (req, res) => {
-    const { first, last, signature } = req.body;
-    console.log("a POST requist was made at /petition");
+    console.log("THIS IS POSTING", req.body);
     db.addsignatures(req.body.first, req.body.last, req.body.signature)
-        .then(console.log(req.body.first))
-        .catch(err());
+        .then(({ rows }) => {
+            console.log("rows: ", rows);
+        })
+        .catch((err) => {
+            console.log("err: ", err);
+        });
 });
 
 app.get("/signers", (req, res) => {
