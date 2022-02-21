@@ -4,6 +4,7 @@ const { engine } = require("express-handlebars");
 const req = require("express/lib/request");
 const app = express();
 const db = require("./database/db");
+const cookieSession = require("cookie-session");
 
 //=======hashing lesson=========
 const { compare, hash } = require("./bc");
@@ -12,8 +13,16 @@ const { compare, hash } = require("./bc");
 //     console.log("hasshedpassword: ", hashedPassword);
 // });
 //=========hashing lesson=========
+
 app.use(express.static("./public"));
 app.use(express.urlencoded({ extended: false }));
+app.use(
+    cookieSession({
+        secret: `super secret thing to make second cookie`,
+        maxAge: 1000 * 60 * 60 * 24 * 14,
+        sameSite: true,
+    })
+);
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
 app.set("views", "./views");
@@ -45,12 +54,12 @@ app.post("/login", (req, res) => {
             // if this reurns true then set a cookie with the user's ID
             //something like req.session.userId
         })
-        .catch((ee) => {
+        .catch((err) => {
             console.log("error comparing password with stored hash: ", err);
             //re-render the page with error message
         });
 });
-//=======reisgster has to be made=====
+//=======register has to be made=====
 app.get("/register", (req, res) => {
     res.render("register");
 });
@@ -76,10 +85,10 @@ app.post("/register", (req, res) => {
 });
 //=-======register has to be made=====
 app.post("/petition", (req, res) => {
-    console.log("THIS IS POSTING", req.body);
-    db.addsignatures(req.body.first, req.body.last, req.body.signature)
+    db.addSignatures(req.body.first, req.body.last, req.body.signature)
         .then(({ rows }) => {
-            console.log("rows: ", rows);
+            req.session.sigId = rows[0].id;
+
             res.redirect("/thanks");
         })
         .catch((err) => {
@@ -95,7 +104,19 @@ app.get("/signers", (req, res) => {
 
 app.get("/thanks", (req, res) => {
     console.log("a GET request was made to the /thanks route");
-    res.render("thanks");
+
+    const returnedSignature = db.retrieveSignature(req.session.sigId);
+
+    returnedSignature
+        .then((val) => {
+            res.render("thanks", {
+                message: val.rows[0].signature,
+            });
+        })
+        .catch((err) => {
+            console.log("error returning returnedSignature(): ", err);
+        });
+
     res.status(200);
 });
 //===================GET requests==========================
@@ -103,3 +124,5 @@ app.get("/thanks", (req, res) => {
 //===================server================================
 app.listen(8080, () => console.log("server listening..."));
 //===================server================================
+//
+//
