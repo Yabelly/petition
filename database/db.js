@@ -7,24 +7,13 @@ module.exports.getAllSigners = () => {
     return db.query(`SELECT * FROM signatures`);
 };
 
-module.exports.addsignatures = (first, last) => {
+module.exports.addsignatures = (first, last, signature) => {
     return db.query(
         `
-        INSERT INTO signatures (first, last)
-        VALUES ($1, $2)
-        RETURNING first, last
+        INSERT INTO signatures (first, last, signature)
+        VALUES ($1, $2, $3)
+        RETURNING first, last, signature
     `,
-        [first, last]
+        [first, last, signature]
     );
 };
-
-// module.exports.addsignatures = (first, last, signature) => {
-//     return db.query(
-//         `
-//         INSERT INTO signatures (first, last, signature)
-//         VALUES ($1, $2, $3)
-//         RETURNING first, last
-//     `,
-//         [first, last, signature]
-//     );
-// };

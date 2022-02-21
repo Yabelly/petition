@@ -7,6 +7,7 @@ const submit = $("#submit");
 const ctx = canvas.getContext("2d");
 let coordinates = { x: 0, y: 0 };
 let doneDrawing = false;
+
 //========SETUP==========
 //
 //========EVENTS==========
@@ -27,11 +28,17 @@ function stopping() {
     $(canvas).on("mouseup", () => {
         $(canvas).off("mousemove", drawing);
         doneDrawing = true;
+
+        var dataURL = canvas.toDataURL();
+        console.log(dataURL);
+        $(`input[type="hidden"]`).val(dataURL);
     });
 }
-///what???
+
 function submitting() {
-    submit.on("click", () => {});
+    submit.on("click", () => {
+        console.log("i am being buttoned");
+    });
 }
 function reposition(e) {
     coordinates.x = e.clientX - canvas.offsetLeft;
