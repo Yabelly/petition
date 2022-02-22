@@ -32,5 +32,6 @@ module.exports.addSignatures = (userId, signature) => {
 };
 
 module.exports.retrieveSignature = (userId) => {
-    return db.query(`SELECT signature FROM signatures WHERE id =$1`, [userId]);
+    console.log("i am working: ");
+    return db.query(`SELECT * FROM signatures WHERE id =$1`, [userId]);
 };

@@ -47,14 +47,19 @@ app.post("/login", (req, res) => {
         .then((val) => {
             compare(req.body.password, val.rows[0].password)
                 .then((match) => {
-                    console.log("there is a match", match);
+                    // console.log("there is a match", match);
                     if (match) {
-                        req.session.sigId = val.rows[0].id;
-                        db.retrieveSignature(req.session.sigId)
-                            .then((val) => {
-                                console.log("val: ", val);
-                                req.session.hasSigned = true;
-                                res.redirect("/thanks");
+                        req.session.userId = val.rows[0].id;
+                        const retrieval = db
+                            .retrieveSignature(req.session.userId)
+                            .then(({ rows }) => {
+                                // console.log("val: ", rows.length);
+                                if (rows.length == 1) {
+                                    req.session.cookieTwo = true;
+                                    res.redirect("/thanks");
+                                } else {
+                                    res.redirect("/petition");
+                                }
                             })
                             .catch((err) => {
                                 console.log(
@@ -63,7 +68,8 @@ app.post("/login", (req, res) => {
                                 );
                             });
                     } else {
-                        console.log("wrong password");
+                        // console.log("wrong password");
+                        res.redirect("/login");
                     }
                 })
                 .catch((err) => {
@@ -74,6 +80,7 @@ app.post("/login", (req, res) => {
                     res.render("/login");
                 });
         })
+
         .catch((err) => {
             "error in retrieving password";
         });
@@ -128,11 +135,11 @@ app.post("/petition", (req, res) => {
 //------------------thanks /------------------------------
 app.get("/thanks", (req, res) => {
     console.log("GET request /thanks route");
-    const returnedSignature = db.retrieveSignature(req.session.sigId);
-    returnedSignature
-        .then((val) => {
+    const returnedSignature = db
+        .retrieveSignature(req.session.userId)
+        .then(({ rows }) => {
             res.render("thanks", {
-                message: val.rows[0].signature,
+                message: rows[0].signature,
             });
         })
         .catch((err) => {
