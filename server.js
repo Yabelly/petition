@@ -8,11 +8,6 @@ const cookieSession = require("cookie-session");
 
 //=======hashing lesson=========
 const { compare, hash } = require("./bc");
-//EXAMPLE FOR HASING A PASSWORD
-// hash("someword").then((hashedPassword) => {
-//     console.log("hasshedpassword: ", hashedPassword);
-// });
-//=========hashing lesson=========
 
 app.use(express.static("./public"));
 app.use(express.urlencoded({ extended: false }));
@@ -29,84 +24,111 @@ app.set("views", "./views");
 
 //===================import and setup=======================
 //
-//===================GET requests===========================
+//===================requests===========================
+//
+//------------------main /------------------------------
 app.get("/", (req, res) => {
-    console.log("GET request to / ,  redirecting to /petition");
-    res.redirect(302, "/petition");
+    console.log("GET request  / route ");
+    res.redirect("/petition");
 });
-
-app.get("/petition", (req, res) => {
-    console.log("a GET request was made to the /petition route");
-    res.render("petition");
-    res.status(200);
-});
-//============monday work to be done=============
+//------------------main /------------------------------
+//------------------login /------------------------------
 app.get("/login", (req, res) => {
+    console.log(
+        "GET request /login route, this should be emty cookie: ",
+        req.session
+    );
     res.render("login");
 });
+
 app.post("/login", (req, res) => {
-    //example below
-    const fakehash = "odsjbjbvbnm"; //is a fake hash
-    compare("mypasswordinpout", fakehash)
-        .then((isMatch) => {
-            console.log("does the password match the one stored: ", isMatch);
-            //if this value is false then  re-render the page
-            // if this reurns true then set a cookie with the user's ID
-            //something like req.session.userId
+    console.log("POST request /login route");
+    db.retrieveEmailPassword(req.body.email)
+        .then((val) => {
+            compare(req.body.password, val.rows[0].password)
+                .then((match) => {
+                    console.log("there is a match", match);
+                    if (match) {
+                        req.session.sigId = val.rows[0].id;
+                        db.retrieveSignature(req.session.sigId)
+                            .then((val) => {
+                                console.log("val: ", val);
+                                req.session.hasSigned = true;
+                                res.redirect("/thanks");
+                            })
+                            .catch((err) => {
+                                console.log(
+                                    "error in retrieving signature",
+                                    err
+                                );
+                            });
+                    } else {
+                        console.log("wrong password");
+                    }
+                })
+                .catch((err) => {
+                    console.log(
+                        "error in comparing, redirect to login page again",
+                        err
+                    );
+                    res.render("/login");
+                });
         })
         .catch((err) => {
-            console.log("error comparing password with stored hash: ", err);
-            //re-render the page with error message
+            "error in retrieving password";
         });
 });
-//=======register has to be made=====
+//------------------login /------------------------------
+//------------------register /------------------------------
 app.get("/register", (req, res) => {
+    console.log("GET request /register route");
     res.render("register");
 });
 app.post("/register", (req, res) => {
+    console.log("POST request /register route", req.body);
     const { first, last, email, password } = req.body;
     hash(password)
-        .then(() => {
-            console.log("hashedpassword", hashedPassword);
-            //to do: store the users values in the databse
-            // if everything is alright then redirect to /petition page
-            //re-render the password with an error message. be vague in error to not give away information
+        .then((hashedPassword) => {
+            req.body.password = hashedPassword;
+            db.registration(
+                req.body.first,
+                req.body.last,
+                req.body.email,
+                req.body.password
+            ).then(({ rows }) => {
+                console.log("rows in db.registration", rows);
+                req.session.userId = rows[0].id;
+                res.redirect("/petition");
+            });
         })
-        .catch(
-            //error gets here for failed hashing or something like that
-            //also respond to the client about error
-            (err) => {
-                console.log(
-                    "error hashing password, or something else went wrong: ",
-                    err
-                );
-            }
-        );
+        .catch((err) => {
+            res.redirect("/register");
+            console.log("error hashing password or POST registration: ", err);
+        });
 });
-//=-======register has to be made=====
+//------------------register /------------------------------
+//------------------petition /------------------------------
+app.get("/petition", (req, res) => {
+    console.log("a GET request was made to the /petition route", req.session);
+    res.render("petition");
+});
 app.post("/petition", (req, res) => {
-    db.addSignatures(req.body.first, req.body.last, req.body.signature)
+    console.log("POST request /petition route");
+    db.addSignatures(req.session.userId, req.body.signature)
         .then(({ rows }) => {
             req.session.sigId = rows[0].id;
 
             res.redirect("/thanks");
         })
         .catch((err) => {
-            console.log("err: ", err);
+            console.log("err in POST /petition: ", err);
         });
 });
-
-app.get("/signers", (req, res) => {
-    console.log("a GET request was made to the /signers route");
-    res.render("signers");
-    res.status(200);
-});
-
+//------------------petition /------------------------------
+//------------------thanks /------------------------------
 app.get("/thanks", (req, res) => {
-    console.log("a GET request was made to the /thanks route");
-
+    console.log("GET request /thanks route");
     const returnedSignature = db.retrieveSignature(req.session.sigId);
-
     returnedSignature
         .then((val) => {
             res.render("thanks", {
@@ -116,11 +138,24 @@ app.get("/thanks", (req, res) => {
         .catch((err) => {
             console.log("error returning returnedSignature(): ", err);
         });
-
     res.status(200);
 });
-//===================GET requests==========================
-
+//------------------thanks /------------------------------
+//------------------signers /------------------------------
+app.get("/signers", (req, res) => {
+    console.log("GET request /signers route");
+    res.render("signers");
+    res.status(200);
+});
+//------------------signers /------------------------------
+//------------------logout /------------------------------
+app.get("/logout", (req, res) => {
+    req.session = null;
+    res.redirect("/");
+});
+//------------------logout /------------------------------
+//===================requests===========================
+//
 //===================server================================
 app.listen(8080, () => console.log("server listening..."));
 //===================server================================
