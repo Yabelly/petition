@@ -85,6 +85,7 @@ app.post("/login", (req, res) => {
             "error in retrieving password";
         });
 });
+
 //------------------login /------------------------------
 //------------------register /------------------------------
 app.get("/register", (req, res) => {
@@ -92,7 +93,7 @@ app.get("/register", (req, res) => {
     res.render("register");
 });
 app.post("/register", (req, res) => {
-    console.log("POST request /register route", req.body);
+    // console.log("POST request /register route", req.body);
     const { first, last, email, password } = req.body;
     hash(password)
         .then((hashedPassword) => {
@@ -103,17 +104,39 @@ app.post("/register", (req, res) => {
                 req.body.email,
                 req.body.password
             ).then(({ rows }) => {
-                console.log("rows in db.registration", rows);
+                // console.log("rows in db.registration", rows);
                 req.session.userId = rows[0].id;
-                res.redirect("/petition");
+                res.redirect("/profile");
             });
         })
         .catch((err) => {
-            res.redirect("/register");
+            res.redirect("/");
             console.log("error hashing password or POST registration: ", err);
         });
 });
 //------------------register /------------------------------
+//------------------profile /------------------------------
+app.get("/profile", (req, res) => {
+    console.log("GET request /profile route");
+    res.render("profile");
+});
+app.post("/profile", (req, res) => {
+    console.log("GET request /profile route");
+    const { age, city, url, user_id } = req.body;
+    req.body.user_id = db.req.session.userId;
+    db.addProfile(
+        req.body.age,
+        req.body.city,
+        req.body.url,
+        req.body.user_id
+    ).then(({ rows }) => {
+        // console.log("rows in db.registration", rows);
+        req.session.userId = rows[0].id;
+        res.redirect("/petition");
+    });
+});
+
+//------------------profile /------------------------------
 //------------------petition /------------------------------
 app.get("/petition", (req, res) => {
     console.log("a GET request was made to the /petition route", req.session);
@@ -158,13 +181,13 @@ app.get("/signers", (req, res) => {
 //------------------logout /------------------------------
 app.get("/logout", (req, res) => {
     req.session = null;
-    res.redirect("/");
+    res.redirect("/login");
 });
 //------------------logout /------------------------------
 //===================requests===========================
 //
 //===================server================================
-app.listen(8080, () => console.log("server listening..."));
+app.listen(8080, () => console.log("server listening at 8080..."));
 //===================server================================
 //
 //

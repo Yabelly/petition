@@ -16,9 +16,9 @@ canvas {
     border: 3px solid black;
     background-color: whitesmoke;
 }
-.input {
-    display: grid;
-    grid-row: 4;
+input {
+    display: block;
+    width: 250px;
 }
 .firstname .lastname {
     width: 50px;
