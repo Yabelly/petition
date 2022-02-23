@@ -1,7 +1,8 @@
 
 DROP TABLE IF EXISTS signatures;
-DROP TABLE IF EXISTS users;
+
 DROP TABLE IF EXISTS user_profiles;
+DROP TABLE IF EXISTS users;
 
 
 CREATE TABLE users (

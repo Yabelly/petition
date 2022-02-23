@@ -29,7 +29,7 @@ app.set("views", "./views");
 //------------------main /------------------------------
 app.get("/", (req, res) => {
     console.log("GET request  / route ");
-    res.redirect("/petition");
+    res.redirect("/register");
 });
 //------------------main /------------------------------
 //------------------login /------------------------------
@@ -122,18 +122,21 @@ app.get("/profile", (req, res) => {
 });
 app.post("/profile", (req, res) => {
     console.log("GET request /profile route");
-    const { age, city, url, user_id } = req.body;
-    req.body.user_id = db.req.session.userId;
-    db.addProfile(
-        req.body.age,
-        req.body.city,
-        req.body.url,
-        req.body.user_id
-    ).then(() => {
-        // console.log("rows in db.registration", rows);
-
-        res.redirect("/petition");
-    });
+    const { age, city, url } = req.body;
+    const inputUrl = req.body.url;
+    if (inputUrl.startsWith("http://") || inputUrl.startsWith("https://")) {
+        db.addProfile(
+            req.body.age,
+            req.body.city,
+            req.body.url,
+            req.session.userId
+        );
+    } else {
+        res.render("profile", {
+            notvalid:
+                "Not a safe url: please add http:// or https:// to start of url",
+        });
+    }
 });
 
 //------------------profile /------------------------------
@@ -168,7 +171,6 @@ app.get("/thanks", (req, res) => {
         .catch((err) => {
             console.log("error returning returnedSignature(): ", err);
         });
-    res.status(200);
 });
 //------------------thanks /------------------------------
 //------------------signers /------------------------------
@@ -180,7 +182,6 @@ app.get("/signers", (req, res) => {
 //------------------signers /------------------------------
 //------------------logout /------------------------------
 app.get("/logout", (req, res) => {
-    req.session = null;
     res.redirect("/login");
 });
 //------------------logout /------------------------------
