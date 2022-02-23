@@ -129,9 +129,9 @@ app.post("/profile", (req, res) => {
         req.body.city,
         req.body.url,
         req.body.user_id
-    ).then(({ rows }) => {
+    ).then(() => {
         // console.log("rows in db.registration", rows);
-        req.session.userId = rows[0].id;
+
         res.redirect("/petition");
     });
 });
@@ -187,7 +187,9 @@ app.get("/logout", (req, res) => {
 //===================requests===========================
 //
 //===================server================================
-app.listen(8080, () => console.log("server listening at 8080..."));
+app.listen(process.env.PORT || 8080, () =>
+    console.log("server listening at 8080...")
+);
 //===================server================================
 //
 //
