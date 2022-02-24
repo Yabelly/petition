@@ -35,7 +35,7 @@ module.exports.addSignatures = (userId, signature) => {
 };
 
 module.exports.retrieveSignature = (userId) => {
-    return db.query(`SELECT * FROM signatures WHERE id =$1`, [userId]);
+    return db.query(`SELECT * FROM signatures WHERE user_id = $1`, [userId]);
 };
 
 module.exports.addProfile = (age, city, url, user_id) => {
@@ -46,12 +46,32 @@ module.exports.addProfile = (age, city, url, user_id) => {
         [age, city, url, user_id]
     );
 };
-module.exports.retrieveNameAgeCity = (userid) => {
+module.exports.retrieveNameAgeCity = () => {
     return db.query(
         //retrieve users.first, users.last, age, city, url to signers page
 
         `
-        SELECT  users.first, users.last signatures.
+        SELECT users.first, users.last, user_profiles.age, user_profiles.url, user_profiles.city, signatures.user_id
+        FROM users
+        JOIN signatures
+        ON users.id = signatures.user_id
+        JOIN user_profiles
+        ON users.id = user_profiles.user_id
         `
+    );
+};
+module.exports.retrieveCity = (city) => {
+    return db.query(
+        //retrieve firstname, lastname, age  from a specific city
+        `
+        SELECT users.first, users.last, user_profiles.age, user_profiles.url 
+        FROM users
+        JOIN signatures
+        ON users.id = signatures.user_id
+        JOIN user_profiles
+        ON users.id = user_profiles.user_id
+        WHERE LOWER(user_profiles.city) = LOWER($1)
+        `,
+        [city]
     );
 };

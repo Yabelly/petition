@@ -152,9 +152,15 @@ app.get("/petition", (req, res) => {
 });
 app.post("/petition", (req, res) => {
     console.log("POST request /petition route");
-
+    if (req.body.signature == "") {
+        res.render("petition", {
+            noinput: "you need to draw signature to continue",
+        });
+    }
+    console.log("req.body: ", req.body, "cookies: ", req.session);
     db.addSignatures(req.session.userId, req.body.signature)
         .then(({ rows }) => {
+            //console.log("signature: ", rows[0].signature);
             req.session.sigId = rows[0].id;
 
             res.redirect("/thanks");
@@ -182,11 +188,28 @@ app.get("/thanks", (req, res) => {
 //------------------signers /------------------------------
 app.get("/signers", (req, res) => {
     console.log("GET request /signers route, req.session: ", req.session);
+    db.retrieveNameAgeCity().then(({ rows }) => {
+        console.log("this is rows: ", rows);
+        res.render("signers", {
+            signers: rows,
+        });
+    });
     //1.retrieve name age city, url (function retrieveNamAgeCity)
     //2. IF url is null display: name age city
     //3.Else url is there, display: name age city with clickable href on name
-    res.render("signers");
+
     res.status(200);
+});
+
+app.get("/signers/:city", (req, res) => {
+    console.log("GET request /signers/:city route");
+
+    db.retrieveCity(req.params.city).then(({ rows }) => {
+        console.log("this is rows: ", rows);
+        res.render("signers", {
+            signers: rows,
+        });
+    });
 });
 //------------------signers /------------------------------
 //------------------logout /------------------------------
