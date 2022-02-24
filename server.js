@@ -5,8 +5,6 @@ const req = require("express/lib/request");
 const app = express();
 const db = require("./database/db");
 const cookieSession = require("cookie-session");
-
-//=======hashing lesson=========
 const { compare, hash } = require("./bc");
 
 app.use(express.static("./public"));
@@ -34,10 +32,7 @@ app.get("/", (req, res) => {
 //------------------main /------------------------------
 //------------------login /------------------------------
 app.get("/login", (req, res) => {
-    console.log(
-        "GET request /login route, this should be emty cookie: ",
-        req.session
-    );
+    console.log("GET request /login route, req.session: ", req.session);
     res.render("login");
 });
 
@@ -93,7 +88,7 @@ app.get("/register", (req, res) => {
     res.render("register");
 });
 app.post("/register", (req, res) => {
-    // console.log("POST request /register route", req.body);
+    console.log("POST request /register route,  ", req.session);
     const { first, last, email, password } = req.body;
     hash(password)
         .then((hashedPassword) => {
@@ -110,26 +105,33 @@ app.post("/register", (req, res) => {
             });
         })
         .catch((err) => {
-            res.redirect("/");
             console.log("error hashing password or POST registration: ", err);
+            res.redirect("/");
         });
 });
 //------------------register /------------------------------
 //------------------profile /------------------------------
 app.get("/profile", (req, res) => {
-    console.log("GET request /profile route");
+    console.log("GET request /profile route, req.session", req.session);
     res.render("profile");
 });
 app.post("/profile", (req, res) => {
     console.log("GET request /profile route");
-    const { age, city, url } = req.body;
-    const inputUrl = req.body.url;
-    if (inputUrl.startsWith("http://") || inputUrl.startsWith("https://")) {
-        db.addProfile(
-            req.body.age,
-            req.body.city,
-            req.body.url,
-            req.session.userId
+    let { age, city, url } = req.body;
+    let inputUrl = req.body.url;
+    if (
+        inputUrl.startsWith("http://") ||
+        inputUrl.startsWith("https://") ||
+        inputUrl == ""
+    ) {
+        if (inputUrl == "") {
+            inputUrl = null;
+        }
+        if (age == "") {
+            age = null;
+        }
+        db.addProfile(age, city, url, req.session.userId).then(
+            res.redirect("petition")
         );
     } else {
         res.render("profile", {
@@ -142,11 +144,15 @@ app.post("/profile", (req, res) => {
 //------------------profile /------------------------------
 //------------------petition /------------------------------
 app.get("/petition", (req, res) => {
-    console.log("a GET request was made to the /petition route", req.session);
+    console.log(
+        "a GET request was made to the /petition route, req.session: ",
+        req.session
+    );
     res.render("petition");
 });
 app.post("/petition", (req, res) => {
     console.log("POST request /petition route");
+
     db.addSignatures(req.session.userId, req.body.signature)
         .then(({ rows }) => {
             req.session.sigId = rows[0].id;
@@ -160,7 +166,7 @@ app.post("/petition", (req, res) => {
 //------------------petition /------------------------------
 //------------------thanks /------------------------------
 app.get("/thanks", (req, res) => {
-    console.log("GET request /thanks route");
+    console.log("GET request /thanks route, req.session: ", req.session);
     const returnedSignature = db
         .retrieveSignature(req.session.userId)
         .then(({ rows }) => {
@@ -175,13 +181,17 @@ app.get("/thanks", (req, res) => {
 //------------------thanks /------------------------------
 //------------------signers /------------------------------
 app.get("/signers", (req, res) => {
-    console.log("GET request /signers route");
+    console.log("GET request /signers route, req.session: ", req.session);
+    //1.retrieve name age city, url (function retrieveNamAgeCity)
+    //2. IF url is null display: name age city
+    //3.Else url is there, display: name age city with clickable href on name
     res.render("signers");
     res.status(200);
 });
 //------------------signers /------------------------------
 //------------------logout /------------------------------
 app.get("/logout", (req, res) => {
+    req.session = null;
     res.redirect("/login");
 });
 //------------------logout /------------------------------

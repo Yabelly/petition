@@ -35,16 +35,23 @@ module.exports.addSignatures = (userId, signature) => {
 };
 
 module.exports.retrieveSignature = (userId) => {
-    console.log("i am working: ");
     return db.query(`SELECT * FROM signatures WHERE id =$1`, [userId]);
 };
 
 module.exports.addProfile = (age, city, url, user_id) => {
-    console.log("i am working: ");
     return db.query(
         `INSERT INTO user_profiles (age, city, url, user_id)
         VALUES ($1, $2, $3, $4)
         RETURNING *`,
         [age, city, url, user_id]
+    );
+};
+module.exports.retrieveNameAgeCity = (userid) => {
+    return db.query(
+        //retrieve users.first, users.last, age, city, url to signers page
+
+        `
+        SELECT  users.first, users.last signatures.
+        `
     );
 };
