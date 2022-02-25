@@ -119,6 +119,7 @@ app.post("/profile", (req, res) => {
     console.log("GET request /profile route");
     let { age, city, url } = req.body;
     let inputUrl = req.body.url;
+
     if (
         inputUrl.startsWith("http://") ||
         inputUrl.startsWith("https://") ||
@@ -184,6 +185,11 @@ app.get("/thanks", (req, res) => {
             console.log("error returning returnedSignature(): ", err);
         });
 });
+app.post("/thanks", (req, res) => {
+    db.removeSig(req.session.userId);
+    req.session.sigId = null;
+    res.redirect("/petition");
+});
 //------------------thanks /------------------------------
 //------------------signers /------------------------------
 app.get("/signers", (req, res) => {
@@ -194,9 +200,6 @@ app.get("/signers", (req, res) => {
             signers: rows,
         });
     });
-    //1.retrieve name age city, url (function retrieveNamAgeCity)
-    //2. IF url is null display: name age city
-    //3.Else url is there, display: name age city with clickable href on name
 
     res.status(200);
 });
@@ -212,6 +215,69 @@ app.get("/signers/:city", (req, res) => {
     });
 });
 //------------------signers /------------------------------
+//------------------edit /------------------------------
+app.get("/edit", (req, res) => {
+    console.log("GET request /edit, req.session: ", req.session);
+
+    db.retrieveForEdit(req.session.userId)
+        .then(({ rows }) => {
+            // console.log("this is rows", rows);
+            res.render("edit", {
+                userinfo: rows,
+            });
+        })
+        .catch((err) => {
+            console.log("error in retrieveForEdit: ", err);
+        });
+});
+
+app.post("/edit", (req, res) => {
+    let { first, last, email, password, age, city, url } = req.body;
+
+    if (url.startsWith("http://") || url.startsWith("https://") || url == "") {
+        if (url == "") {
+            url = null;
+        }
+        if (age == "") {
+            age = null;
+        }
+        if (password == "") {
+            //if no new password
+            db.updateFirstLastEmail(first, last, email, req.session.userId);
+            db.upsertUserProfiles(age, city, url, req.session.userId);
+            res.redirect("/thanks");
+        } else {
+            //if new password
+            hash(password).then((hashedPassword) => {
+                db.updateFirstLastEmailPassword(
+                    first,
+                    last,
+                    email,
+                    hashedPassword,
+                    req.session.userId
+                )
+                    .then(() => {
+                        db.upsertUserProfiles(
+                            age,
+                            city,
+                            url,
+                            req.session.userId
+                        );
+                    })
+                    .catch((err) => {
+                        console.log("error in editing userfile: ", err);
+                    });
+            });
+        }
+    } else {
+        res.render("profile", {
+            notvalid:
+                "Not a safe url: please add http:// or https:// to start of url",
+        });
+    }
+    res.redirect("/thanks");
+});
+//------------------edit /------------------------------
 //------------------logout /------------------------------
 app.get("/logout", (req, res) => {
     req.session = null;

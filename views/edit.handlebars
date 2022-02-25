@@ -1,0 +1,27 @@
+<form action="" method="POST">
+    {{#userinfo}}
+        <label for="firstname">first name</label>
+        <input type="text" name="first" value="{{first}}" />
+
+        <label for="lastname">last name</label>
+        <input type="text" name="last" value="{{last}}" />
+
+        <label for="email">email adress</label>
+        <input type="email" name="email" value="{{email}}" />
+
+        <label for="password">password</label>
+        <input type="password" minlength="8" name="password" />
+
+        <label for="age">age</label>
+        <input type="number" name="age" value="{{age}}" />
+
+        <label for="city">city</label>
+        <input type="text" name="city" value="{{city}}" />
+        <h3>{{notvalid}}</h3>
+        <label for="website">URL(https only!)</label>
+
+        <input type="url" name="url" value="{{url}}" />
+    {{/userinfo}}
+    <button type="submit">submit</button>
+
+</form>

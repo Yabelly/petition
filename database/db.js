@@ -48,8 +48,6 @@ module.exports.addProfile = (age, city, url, user_id) => {
 };
 module.exports.retrieveNameAgeCity = () => {
     return db.query(
-        //retrieve users.first, users.last, age, city, url to signers page
-
         `
         SELECT users.first, users.last, user_profiles.age, user_profiles.url, user_profiles.city, signatures.user_id
         FROM users
@@ -62,7 +60,6 @@ module.exports.retrieveNameAgeCity = () => {
 };
 module.exports.retrieveCity = (city) => {
     return db.query(
-        //retrieve firstname, lastname, age  from a specific city
         `
         SELECT users.first, users.last, user_profiles.age, user_profiles.url 
         FROM users
@@ -73,5 +70,75 @@ module.exports.retrieveCity = (city) => {
         WHERE LOWER(user_profiles.city) = LOWER($1)
         `,
         [city]
+    );
+};
+
+module.exports.retrieveForEdit = (userId) => {
+    return db.query(
+        `
+        SELECT users.first, users.last, users.email, user_profiles.age, user_profiles.city, user_profiles.url
+        FROM users
+        JOIN user_profiles
+        ON users.id = user_profiles.user_id
+        WHERE user_id = ($1)
+        
+        
+        `,
+        [userId]
+    );
+};
+
+module.exports.updateFirstLastEmail = (first, last, email, userId) => {
+    return db.query(
+        `
+    UPDATE users
+       SET first = $1,
+       last = $2,
+       email = $3
+         WHERE id = $4
+    `,
+        [first, last, email, userId]
+    );
+};
+
+module.exports.updateFirstLastEmailPassword = (
+    first,
+    last,
+    email,
+    hashedPassword,
+    userId
+) => {
+    return db.query(
+        `
+        UPDATE users
+        SET first = $1,
+        last = $2,
+        email = $3,
+        password = $4
+        WHERE id = $5
+        `,
+        [first, last, email, hashedPassword, userId]
+    );
+};
+
+module.exports.upsertUserProfiles = (age, city, url, userId) => {
+    return db.query(
+        `
+        INSERT INTO user_profiles (age, city, url, user_id)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (user_id)
+        DO UPDATE SET age = $1, city = $2, url = $3
+        `,
+        [age, city, url, userId]
+    );
+};
+
+module.exports.removeSig = (userId) => {
+    return db.query(
+        `
+        DELETE FROM signatures 
+        WHERE user_id = $1
+    `,
+        [userId]
     );
 };
