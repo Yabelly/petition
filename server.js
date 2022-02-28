@@ -33,6 +33,7 @@ app.get("/", (req, res) => {
 //------------------login /------------------------------
 app.get("/login", (req, res) => {
     console.log("GET request /login route, req.session: ", req.session);
+
     res.render("login");
 });
 
@@ -63,7 +64,7 @@ app.post("/login", (req, res) => {
                                 );
                             });
                     } else {
-                        // console.log("wrong password");
+                        console.log("wrong password");
                         res.redirect("/login");
                     }
                 })
@@ -72,12 +73,21 @@ app.post("/login", (req, res) => {
                         "error in comparing, redirect to login page again",
                         err
                     );
-                    res.render("/login");
+                    res.render("login", {
+                        wrongLogin: "Wrong login detail, try again",
+                    });
                 });
+        })
+        .catch((err) => {
+            res.render("login", {
+                notExisting:
+                    "user does not exist yet or you typed something wrong, try again",
+            });
         })
 
         .catch((err) => {
-            "error in retrieving password";
+            "error in retrieving password", err;
+            res.render("login");
         });
 });
 
@@ -89,30 +99,38 @@ app.get("/register", (req, res) => {
 });
 app.post("/register", (req, res) => {
     console.log("POST request /register route,  ", req.session);
+
     const { first, last, email, password } = req.body;
+    console.log(req.body);
     hash(password)
         .then((hashedPassword) => {
-            req.body.password = hashedPassword;
-            db.registration(
-                req.body.first,
-                req.body.last,
-                req.body.email,
-                req.body.password
-            ).then(({ rows }) => {
-                // console.log("rows in db.registration", rows);
-                req.session.userId = rows[0].id;
-                res.redirect("/profile");
-            });
+            console.log("hashedpassword", hashedPassword);
+            db.registration(first, last, email, hashedPassword)
+                .then(({ rows }) => {
+                    // console.log("rows in db.registration", rows);
+                    req.session.userId = rows[0].id;
+                    res.redirect("/profile");
+                })
+                .catch((err) => {
+                    console.log("user already exists error", err);
+                    res.render("register", {
+                        existingUser:
+                            "this user already exists try something else",
+                    });
+                });
         })
         .catch((err) => {
             console.log("error hashing password or POST registration: ", err);
-            res.redirect("/");
+            res.render("register", {
+                mistake: "something went wrong, try again!",
+            });
         });
 });
 //------------------register /------------------------------
 //------------------profile /------------------------------
 app.get("/profile", (req, res) => {
-    console.log("GET request /profile route, req.session", req.session);
+    console.log("GET request /profile", req.session);
+
     res.render("profile");
 });
 app.post("/profile", (req, res) => {
@@ -168,14 +186,17 @@ app.post("/petition", (req, res) => {
         })
         .catch((err) => {
             console.log("err in POST /petition: ", err);
+            res.render("petition", {
+                errorHappening: "something went wrong try again!",
+            });
         });
 });
 //------------------petition /------------------------------
 //------------------thanks /------------------------------
 app.get("/thanks", (req, res) => {
     console.log("GET request /thanks route, req.session: ", req.session);
-    const returnedSignature = db
-        .retrieveSignature(req.session.userId)
+
+    db.retrieveSignature(req.session.userId)
         .then(({ rows }) => {
             res.render("thanks", {
                 message: rows[0].signature,
@@ -183,8 +204,10 @@ app.get("/thanks", (req, res) => {
         })
         .catch((err) => {
             console.log("error returning returnedSignature(): ", err);
+            res.render("thanks");
         });
 });
+
 app.post("/thanks", (req, res) => {
     db.removeSig(req.session.userId);
     req.session.sigId = null;
@@ -211,6 +234,7 @@ app.get("/signers/:city", (req, res) => {
         console.log("this is rows: ", rows);
         res.render("signers", {
             signers: rows,
+            //     returnButton:
         });
     });
 });

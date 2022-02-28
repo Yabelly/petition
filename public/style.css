@@ -1,21 +1,24 @@
 body {
-    background-color: brown;
+    background-color: #d6f6dd;
 }
 header {
-    background-color: cadetblue;
+    background-color: #dac4f7;
 }
 footer {
-    background-color: chocolate;
+    background-color: #f4989c;
 }
 #firstname #lastname {
     width: 100px;
     height: 50px;
 }
+
 canvas {
     cursor: crosshair;
     border: 3px solid black;
-    background-color: whitesmoke;
+    background-color: #ebd2b4;
+    border-style: 5px solid #acecf7;
 }
+
 input {
     display: block;
     width: 250px;
@@ -35,14 +38,15 @@ button {
     background-color: chocolate;
 }
 
-.deleteSig {
+.deleteSig .lookalike {
     background: none !important;
     border: none;
     padding: 0 !important;
-    /*optional*/
-    font-family: arial, sans-serif;
-    /*input has OS specific font-family*/
-    color: #069;
+    color: black;
     text-decoration: underline;
     cursor: pointer;
+}
+
+.redirecting {
+    display: block;
 }

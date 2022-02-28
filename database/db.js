@@ -5,18 +5,26 @@ const db = spicedPg(
     process.env.DATABASE_URL ||
         `postgres:postgres:postgres@localhost:5432/petition`
 );
+module.exports.countSigners = () => {
+    return db.query(
+        `
+        SELECT COUNT(*)
+        FROM users
+        `
+    );
+};
 
 module.exports.getAllSigners = () => {
     return db.query(`SELECT * FROM signatures`);
 };
-module.exports.registration = (first, last, email, password) => {
+module.exports.registration = (first, last, email, hashedPassword) => {
     return db.query(
         `
     INSERT INTO users (first, last, email, password)
     VALUES ($1, $2, $3, $4)
     RETURNING *
     `,
-        [first, last, email, password]
+        [first, last, email, hashedPassword]
     );
 };
 module.exports.retrieveEmailPassword = (email) => {
