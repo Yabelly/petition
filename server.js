@@ -195,11 +195,12 @@ app.post("/petition", (req, res) => {
 //------------------thanks /------------------------------
 app.get("/thanks", (req, res) => {
     console.log("GET request /thanks route, req.session: ", req.session);
-
-    db.retrieveSignature(req.session.userId)
-        .then(({ rows }) => {
+    Promise.all([db.retrieveSignature(req.session.userId), db.countSigners()])
+        .then((obj) => {
+            // console.log("obj: ", obj[1].rows);
             res.render("thanks", {
-                message: rows[0].signature,
+                message: obj[0].rows[0].signature,
+                count: obj[1].rows[0].count,
             });
         })
         .catch((err) => {
