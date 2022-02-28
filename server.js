@@ -266,6 +266,7 @@ app.post("/edit", (req, res) => {
         if (age == "") {
             age = null;
         }
+
         if (password == "") {
             //if no new password
             db.updateFirstLastEmail(first, last, email, req.session.userId);
